@@ -3,8 +3,9 @@
  * @param {Date} the created time
  * @struct
  */
+
 function Duration(begin) {
-	if(typeof begin != 'undefined') {
+	if (begin !== undefined) {
 		this.begin = {
 			hour: begin.getUTCHours(),
 			minute: begin.getUTCMinutes(),
@@ -25,10 +26,9 @@ Duration.prototype.Stop = function(end) {
  * @return {boolean}
  */
 Duration.prototype.Closed = function() {
-	if(typeof this.end != 'undefined') {
+	if (this.end !== undefined) {
 		return true;
 	}
-
 	return false;
 };
 
@@ -36,12 +36,11 @@ Duration.prototype.Closed = function() {
  * @return {int}
  */
 Duration.prototype.Sum = function() {
-	if(typeof this.end != 'undefined') {
-		var begin = this.begin.hour*3600 + this.begin.minute*60 + this.begin.second;
-		var end = this.end.hour*3600 + this.end.minute*60 + this.end.second;
+	if (this.end !== undefined) {
+		var begin = this.begin.hour * 3600 + this.begin.minute * 60 + this.begin.second;
+		var end = this.end.hour * 3600 + this.end.minute * 60 + this.end.second;
 		return end - begin;
 	}
-
 	return 0;
 };
 
@@ -50,6 +49,7 @@ Duration.prototype.Sum = function() {
  * @param {string} domain of the website
  * @struct
  */
+
 function Usage(domain) {
 	var current = new Date();
 	this.timestamp = current.getTime();
@@ -63,14 +63,12 @@ function Usage(domain) {
  */
 Usage.prototype.Record = function() {
 	var current = new Date();
-	var lastRecord = this.records[this.records.length-1];
-
-	if(lastRecord.Closed()) {
+	var lastRecord = this.records[this.records.length - 1];
+	if (lastRecord.Closed()) {
 		this.records.push(new Duration(current));
-	}else{
+	} else {
 		lastRecord.Stop(current);
 		this.sum += lastRecord.Sum();
 	}
-
 	return this;
 };
