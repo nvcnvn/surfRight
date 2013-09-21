@@ -13,7 +13,12 @@
     "default_popup": "surfRight.popup.html"
   },
   "background": {
-    "scripts": ["libs/jquery-2.0.3.js", "surfRight.js"],
+    "scripts": [
+      "libs/jquery-2.0.3.js",
+      "libs/db.js",
+      "surfRight.data.js",
+      "surfRight.js"
+    ],
     "persistent": false
   }
 }
