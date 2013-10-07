@@ -9,15 +9,16 @@
     "tabs"
   ],
   "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "surfRight.popup.html"
+    "default_icon": "img/icon.png",
+    "default_popup": "popup.html"
   },
   "background": {
     "scripts": [
-      "libs/jquery-2.0.3.js",
-      "libs/db.js",
-      "surfRight.data.js",
-      "surfRight.js"
+      "js/libs/jquery-2.0.3.js",
+      "js/libs/db.js",
+      "js/util.js",
+      "js/data.js",
+      "js/background.js"
     ],
     "persistent": false
   }

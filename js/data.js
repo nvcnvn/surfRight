@@ -1,3 +1,32 @@
+function OpenDB() {
+	return db.open({
+		server: 'testing',
+		version: 2,
+		schema: {
+			usage: {
+				key: {
+					keyPath: 'id',
+					autoIncrement: true
+				},
+				indexes: {
+					timestamp: {},
+					domain: {}
+				}
+			},
+			setting: {
+				key: {
+					keyPath: 'id',
+					autoIncrement: true					
+				},
+				indexes: {
+					domain: {},
+					aliases : {}
+				}
+			}
+		}
+	});
+}
+
 /**
  * @constructor
  * @param {Date} the created time
@@ -53,6 +82,7 @@ Duration.prototype.Sum = function() {
 function Usage(domain) {
 	var current = new Date();
 	this.timestamp = current.getTime();
+	this.timestr = current.toUTCString();
 	this.domain = domain;
 	this.sum = 0;
 	this.records = [new Duration(current)];
@@ -71,4 +101,29 @@ Usage.prototype.Record = function() {
 		this.sum += lastRecord.Sum();
 	}
 	return this;
+};
+
+function Setting(domain) {
+	this.domain = domain;
+	this.aliases = [];
+}
+
+Setting.prototype.AddAliases = function(aliases) {
+	var self = this;
+	if(typeof aliases == "string" || aliases instanceof String) {
+		// $.each(aliases.split(","), function(idx, item) {
+		// 	var alias = $.trim(item);
+		// 	//should be 3 here?
+		// 	if(alias.length > 3) {
+
+		// 	}
+		// });
+		self.aliases.push(aliases);
+	} else if(typeof aliases == "array" || aliases instanceof Array) {
+		$.each(aliases, function(idx, item){
+			if(typeof item == "string" || item instanceof String) {
+				self.aliases.push(item);
+			}
+		});
+	}
 };
