@@ -103,9 +103,40 @@ Usage.prototype.Record = function() {
 	return this;
 };
 
+BLOCK_LEVEL = {
+	INFO: {val: 0},
+	WARNING: {val: 1},
+	STOP: {val: 2}
+};
+
+BLOCK_WHEN = {
+	DAY: {val: 0},
+	WEEK: {val: 1},
+	MONTH: {val: 2}
+};
+/**
+ * @constructor
+ * @struct
+ */
+
+function BlockInstruction() {
+	//give an note when view this website for 30 min per day
+	this.level = BLOCK_LEVEL.INFO;
+	this.when = BLOCK_WHEN.DAY;
+	this.amount = 60*30;
+}
+
+/**
+ * @constructor
+ * @param {string} domain of the website
+ * @struct
+ */
+
 function Setting(domain) {
 	this.domain = domain;
 	this.aliases = [];
+	this.ignoreWWW = false;
+	this.instructions = [];
 }
 
 Setting.prototype.AddAliases = function(aliases) {
