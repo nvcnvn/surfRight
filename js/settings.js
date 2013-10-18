@@ -12,7 +12,8 @@ function SettingManager() {
 }
 
 SettingManager.prototype.List = function(table) {
-	//$(table)
+	var dmMngr = new SiteManager(0);
+	$(table).find('.setting-list').append(dmMngr.element);
 };
 
 SettingManager.prototype.HandleAddNewDomain = function(txtNewDomain, txtNewAliases, btAddNew) {
@@ -45,8 +46,58 @@ SettingManager.prototype.HandleAddNewDomain = function(txtNewDomain, txtNewAlias
 	});
 };
 
+function LabelDomainManagaer(parent) {
+	this.parent = parent;
+
+	this.element = $('<div></div>');
+	this.element.append($('<div></div>', {
+		class: 'txtDomain',
+		contenteditable: true
+	}));
+
+	this.lblDel = $('<label>X</label>');
+	this.element.append(this.lblDel);
+	this.HandleDelClick();
+}
+
+LabelDomainManagaer.prototype.HandleContaintPress = function() {
+	
+};
+
+LabelDomainManagaer.prototype.HandleDelClick = function() {
+	var self = this;
+	self.lblDel.click(function(){
+		self.lblDel.remove();
+	});
+};
+
+function SiteManager(data) {
+	if(!(data instanceof Setting)) {
+
+	}
+
+	this.data = data;
+	this.element = $('<tr></tr>').data('data', this.data);
+
+	var num = $('<td></td>');
+	this.element.append(num);
+
+	var d = new LabelDomainManagaer(this);
+	this.element.append(d.element);
+
+	var aliases = $('<td></td>');
+	this.element.append(aliases);
+
+	var rules = $('<td></td>');
+	this.element.append(rules);
+
+	var del = $('<td></td>');
+	this.element.append(del);
+}
+
 //exec
 $(function(){
 	var manager = new SettingManager();
 	manager.HandleAddNewDomain("#txtNewDomain", "#txtNewAliases", "#btAddNew");
+	manager.List('#tbSetting');
 })
