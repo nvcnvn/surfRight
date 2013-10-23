@@ -1,7 +1,7 @@
 function OpenDB() {
 	return db.open({
-		server: 'testing',
-		version: 2,
+		server: 'surfRight',
+		version: 1,
 		schema: {
 			usage: {
 				key: {
@@ -104,15 +104,15 @@ Usage.prototype.Record = function() {
 };
 
 BLOCK_LEVEL = {
-	INFO: {val: 0},
-	WARNING: {val: 1},
-	STOP: {val: 2}
+	INFO: 0,
+	WARNING: 1,
+	STOP: 2
 };
 
 BLOCK_WHEN = {
-	DAY: {val: 0},
-	WEEK: {val: 1},
-	MONTH: {val: 2}
+	DAY: 0,
+	WEEK: 1,
+	MONTH: 2
 };
 /**
  * @constructor
@@ -138,23 +138,3 @@ function Setting(domain) {
 	this.ignoreWWW = false;
 	this.instructions = [];
 }
-
-Setting.prototype.AddAliases = function(aliases) {
-	var self = this;
-	if(typeof aliases == "string" || aliases instanceof String) {
-		// $.each(aliases.split(","), function(idx, item) {
-		// 	var alias = $.trim(item);
-		// 	//should be 3 here?
-		// 	if(alias.length > 3) {
-
-		// 	}
-		// });
-		self.aliases.push(aliases);
-	} else if(typeof aliases == "array" || aliases instanceof Array) {
-		$.each(aliases, function(idx, item){
-			if(typeof item == "string" || item instanceof String) {
-				self.aliases.push(item);
-			}
-		});
-	}
-};
