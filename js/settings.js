@@ -303,19 +303,15 @@ SiteManager.prototype.Save = function() {
 		self.data.instructions.push($(item).data('data').Val());
 	})
 
-	if(typeof self.data.id == 'undefined') {
+	self.db.setting.update(self.data).done(function(){
+		console.log('update done');
+	}).fail(function() {
 		self.db.setting.add(self.data).done(function(){
 			console.log('save done');
 		}).fail(function() {
 			self.element.addClass('error');
-		});
-	}else{
-		self.db.setting.update(self.data).done(function(){
-			console.log('update done');
-		}).fail(function() {
-			self.element.addClass('error');
-		});
-	}
+		});	
+	});
 };
 
 SiteManager.prototype.AddLabelAlias = function(alias) {

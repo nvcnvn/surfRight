@@ -5,22 +5,22 @@ function OpenDB() {
 		schema: {
 			usage: {
 				key: {
-					keyPath: 'id',
-					autoIncrement: true
+					keyPath: ['domain', 'datestamp']
 				},
 				indexes: {
-					timestamp: {},
-					domain: {}
+					datestamp: {},
+					timestamp: {}
 				}
 			},
 			setting: {
 				key: {
-					keyPath: 'id',
-					autoIncrement: true					
+					keyPath: 'domain'				
 				},
 				indexes: {
-					domain: {},
-					aliases : {}
+					aliases : {
+						unique: true,
+						multiEntry: true
+					}
 				}
 			}
 		}
@@ -81,6 +81,7 @@ Duration.prototype.Sum = function() {
 
 function Usage(domain) {
 	var current = new Date();
+	this.datestamp = getDayUTC(current);
 	this.timestamp = current.getTime();
 	this.timestr = current.toUTCString();
 	this.domain = domain;

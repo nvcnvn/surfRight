@@ -13,84 +13,132 @@ function SurfRight() {
 	.done(function(s) {
 		self.db = s;
 		// listening to event
-		chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-			if (changeInfo.status !== undefined && changeInfo.status == 'complete') {
-				self.Update();
-			}
+		chrome.tabs.onActivated.addListener(function(activeInfo){
+			chrome.tabs.get(activeInfo.tabId, function(tab){
+				self.Update(tab);
+			});
 		});
+		// chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+		// 	if (changeInfo.status !== undefined && changeInfo.status == 'complete') {
+		// 		self.Update(tab);
+		// 	}
+		// });
 	})
 	.fail(function() {
 		alert('Cannot connect to browser IndexedDB');
 	});
 }
 
-SurfRight.prototype.Update = function() {
+SurfRight.prototype.LoadSetting = function(hostname, callback) {
 	var self = this;
-	chrome.tabs.query({
-		status: "complete",
-		url: "*://*/*"
-	}, function(tabs) {
-		var url = document.createElement('a');
-		for (var i = 0; i < tabs.length; i++) {
-			url.href = tabs[i].url;
-			if(url.protocol != "http:" && url.protocol != "https:") {
-				console.log("Invlaid protocol", url.protocol);
-				return;
-			}
 
-			var hostname = url.hostname;
-			if(self.ignoreWWW) {
-				if(hostname.indexOf("www.") == 0) {
-					hostname = hostname.slice(4);
-				}
-			}
-
-			if (self.openingDomains.indexOf(hostname) == -1) {
-				self.openingDomains.push(hostname);
-			}
-		}
-		var current = new Date();
-		$.each(self.openingDomains, function(idx, domain) {
-			self.db.usage.query('timestamp')
-			.bound(
-				Date.UTC(current.getUTCFullYear(),
-					current.getUTCMonth(),
-					current.getUTCDate()),
-				current.getTime())
-			.filter('domain', domain)
+	self.db.setting
+	.get(hostname)
+	.done(function(setting) {
+		if(typeof setting == 'undefined') {
+			self.db.setting
+			.query('aliases')
+			.only(hostname)
 			.execute()
-			.done(function(usages) {
-				if (usages.length == 0) {
-					self.db.usage.add(new Usage(domain))
-					.done(function(usage) {
-						console.log("saving ok");
-					})
-					.fail(function() {
-						console.log('error when save Usage to IndexedDB');
-					});
-				} else {
-					var u = new Usage();
-					u.id = usages[0].id;
-					u.timestamp = usages[0].timestamp;
-					u.domain = usages[0].domain;
-					u.sum = usages[0].sum;
-					u.records = new Array();
-					$.each(usages[0].records, function(idx, item) {
-						var d = new Duration()
-						d.begin = item.begin;
-						if (item.end !== undefined) {
-							d.end = item.end;
-						}
-						u.records.push(d);
-					})
-					self.db.usage.update(u.Record())
-					.done(function(info) {
-						console.log('updated', info);
-					});
+			.done(function(settings){
+				if(settings.length > 0) {
+					callback(settings[0]);
+				}else{
+					callback();
 				}
+			})
+			.fail(function(){
+				console.log('falied to query hostname on aliases');
 			});
-		});
+		}else{
+			callback(setting);
+		}
+	}).fail(function(){
+		console.log('falied to get hostname');
+	});	
+};
+
+SurfRight.prototype.CreateUsage = function(hostname, callback) {
+	var self = this;
+
+	self.db.usage.add(new Usage(hostname))
+	.done(function() {
+		if(typeof callback != 'undefined') {
+			callback();
+		}
+		console.log("saving new Usage to IndexedDB");
+	})
+	.fail(function() {
+		console.log('error when save Usage to IndexedDB');
 	});
 };
+
+SurfRight.prototype.Update = function(tab) {
+	var self = this;
+
+	var url = document.createElement('a');
+	url.href = tab.url;
+	if(url.protocol != "http:" && url.protocol != "https:") {
+		console.log("Invlaid protocol", url.protocol);
+		return;
+	}
+	var hostname = url.hostname;
+	if(self.ignoreWWW) {
+		if(hostname.indexOf("www.") == 0) {
+			hostname = hostname.slice(4);
+		}
+	}
+
+	if(typeof self.currentHostname == 'undefined') {
+		//begin for the new one
+		self.CreateUsage(hostname);
+		self.currentHostname = hostname;
+	}else{
+		if(self.currentHostname != hostname) {
+			//update the record for the old tab
+			self.LoadSetting(self.currentHostname, function(st){
+				var current = new Date();
+				var domain;
+				if(typeof st == 'undefined') {
+					domain = self.currentHostname;
+				}else{
+					domain = st.domain;
+				}
+				self.db.usage
+				.get([domain, getDayUTC(current)])
+				.done(function(usage) {
+					if (typeof usage == 'undefined') {
+						self.CreateUsage(domain, function() {
+							self.currentHostname = hostname;
+						});
+					} else {
+						var u = new Usage();
+						u.datestamp = usage.datestamp;
+						u.timestamp = usage.timestamp;
+						u.domain = usage.domain;
+						u.sum = usage.sum;
+						u.records = new Array();
+						$.each(usage.records, function(idx, item) {
+							var d = new Duration()
+							d.begin = item.begin;
+							if (item.end !== undefined) {
+								d.end = item.end;
+							}
+							u.records.push(d);
+						})
+						self.db.usage.update(u.Record())
+						.done(function(info) {
+							//then begin for the new one
+							self.CreateUsage(hostname);
+							self.currentHostname = hostname;
+							console.log('updated Usage', info);
+						});
+					}
+				});
+			});
+		}
+		//else do nothing
+	}
+}
 
 var surf = new SurfRight();
