@@ -12,7 +12,7 @@ function OpenDB() {
 					timestamp: {}
 				}
 			},
-			setting: {
+			rule: {
 				key: {
 					keyPath: 'domain'				
 				},
@@ -89,6 +89,25 @@ function Usage(domain) {
 	this.records = [new Duration(current)];
 }
 
+Usage.fromObj = function(obj) {
+	var u = new Usage();
+	u.datestamp = obj.datestamp;
+	u.timestamp = obj.timestamp;
+	u.domain = obj.domain;
+	u.sum = obj.sum;
+	u.records = new Array();
+	$.each(obj.records, function(idx, item) {
+		var d = new Duration()
+		d.begin = item.begin;
+		if (item.end !== undefined) {
+			d.end = item.end;
+		}
+		u.records.push(d);
+	})
+
+	return u;
+}
+
 /**
  * @return {Usage}
  */
@@ -133,7 +152,7 @@ function BlockInstruction() {
  * @struct
  */
 
-function Setting(domain) {
+function Rule(domain) {
 	this.domain = domain;
 	this.aliases = [];
 	this.ignoreWWW = false;

@@ -1,4 +1,4 @@
-function SettingManager() {
+function RuleManager() {
 	var self = this;
 	OpenDB()
 	.done(function(s) {
@@ -11,16 +11,16 @@ function SettingManager() {
 	});
 }
 
-SettingManager.prototype.List = function(table) {
+RuleManager.prototype.List = function(table) {
 	var self = this;
 	var dmMngr = new SiteManager(self.db, 0);
-	$(table).find('.setting-list').append(dmMngr.element);
+	$(table).find('.rule-list').append(dmMngr.element);
 
-	self.db.setting.query().all().execute().done(function(settings){
-		$.each(settings, function(idx, item){
+	self.db.rule.query().all().execute().done(function(rules){
+		$.each(rules, function(idx, item){
 			console.log('item', item)
 			var dmMngr = new SiteManager(self.db, item);
-			$(table).find('.setting-list').append(dmMngr.element);			
+			$(table).find('.rule-list').append(dmMngr.element);			
 		});
 	});
 };
@@ -145,7 +145,7 @@ LabelAlias.prototype.Validate = function() {
 	}	
 };
 
-function LabelRule(parent) {
+function LabelInstruction(parent) {
 	this.parent = parent;
 	this.element = $('<div></div>', {
 		class: 'control-group controls-row input-prepend input-append block'
@@ -204,7 +204,7 @@ function LabelRule(parent) {
 	var self = this;
 
 	self.bt.lbl0.click(function(){
-		self.parent.AddLabelRule();
+		self.parent.AddLabelInstruction();
 	});
 
 	self.bt.lbl1.click(function(){
@@ -212,7 +212,7 @@ function LabelRule(parent) {
 	});
 }
 
-LabelRule.prototype.Val = function() {
+LabelInstruction.prototype.Val = function() {
 	var instruction = new BlockInstruction();
 	instruction.level = parseInt(this.sltLevel.val());
 	instruction.when = parseInt(this.sltRule.val());
@@ -221,7 +221,7 @@ LabelRule.prototype.Val = function() {
 	return instruction;
 };
 
-LabelRule.prototype.Validate = function() {
+LabelInstruction.prototype.Validate = function() {
 	if (parseInt(this.amount.val()) < 1) {
 		this.element.addClass('error');
 		return false;
@@ -236,7 +236,7 @@ function SiteManager(db, data) {
 	this.db = db;
 	if(typeof data.domain == 'undefined' || typeof data.aliases == 'undefined' ||
 		typeof data.instructions == 'undefined') {
-		data = new Setting();
+		data = new Rule();
 	}
 
 	this.data = data;
@@ -264,10 +264,10 @@ function SiteManager(db, data) {
 	this.element.append(this.tdRules);
 	if(data.instructions instanceof Array && data.instructions.length > 0) {
 		$.each(data.instructions, function(idx, item){
-			self.AddLabelRule(item);
+			self.AddLabelInstruction(item);
 		});
 	} else {
-		this.AddLabelRule();
+		this.AddLabelInstruction();
 	}
 
 	this.tdBt = $('<td></td>');
@@ -303,10 +303,10 @@ SiteManager.prototype.Save = function() {
 		self.data.instructions.push($(item).data('data').Val());
 	})
 
-	self.db.setting.update(self.data).done(function(){
+	self.db.rule.update(self.data).done(function(){
 		console.log('update done');
 	}).fail(function() {
-		self.db.setting.add(self.data).done(function(){
+		self.db.rule.add(self.data).done(function(){
 			console.log('save done');
 		}).fail(function() {
 			self.element.addClass('error');
@@ -323,8 +323,8 @@ SiteManager.prototype.AddLabelAlias = function(alias) {
 	l.txtAlias.focus();
 };
 
-SiteManager.prototype.AddLabelRule = function(rule) {
-	var l = new LabelRule(this);
+SiteManager.prototype.AddLabelInstruction = function(rule) {
+	var l = new LabelInstruction(this);
 	this.tdRules.append(l.element);
 	if(rule instanceof Object) {
 		if(typeof rule.level == 'number') {
@@ -353,5 +353,5 @@ SiteManager.prototype.AddLabelSite = function(site) {
 
 //exec
 $(function(){
-	var manager = new SettingManager();
+	var manager = new RuleManager();
 })
