@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>{{if .Title}}{{.Title}}{{end}}</title>
+	<meta name="description" content="toys template project - demon layout.tmpl">
+	<meta name="author" content="nguyen@open-vn.org">
+	<link rel="stylesheet" type="text/css" href="/statics/css/theme.css">
+	<!--[if lt IE 9]>
+	<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+</head>
+<body>
+<div id="main">
+	<header>logo
+		<nav>links</nav>
+	</header>
+	<section id="content">
+	{{template "page" .}}
+	</section>
+	<footer>copyright, more links, contact info</footer>
+</div>
+</body>
+</html>
