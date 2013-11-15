@@ -3,7 +3,7 @@ function StatisticManager() {
 
 	this.cTop = Raphael("cTop");
 	var fin = function () {
-	    this.flag = self.cTop.popup(this.bar.x, this.bar.y, this.bar.value || "0").insertBefore(this);
+	    this.flag = self.cTop.popup(this.bar.x, this.bar.y, milisecondToString(this.bar.value) || "0").insertBefore(this);
 	};
 
 	var fout = function () {
@@ -18,13 +18,13 @@ function StatisticManager() {
 			var datas = [];
 			var labels = []
 			for(var i = 0; i < n; i++) {
-				datas.push(d.data[i].sum);
-				labels.push(d.data[i].hostname);
+				datas.push([d.data[i].sum]);
+				labels.push([d.data[i].hostname]);
 			}
 
-			self.cTop.hbarchart(0, 0, (screen.availWidth/100)*90, 220, [datas])
+			self.cTop.hbarchart(10, 10, (screen.availWidth/100)*90, 220, datas)
 			.hover(fin, fout)
-			.label([labels]);
+			.label(labels);
 		})
 	})
 	.fail(function() {

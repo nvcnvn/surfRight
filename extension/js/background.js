@@ -8,23 +8,41 @@ function SurfRight() {
 
 	self.ignoreWWW = true;
 	self.openingDomains = [];
+	self._queueUpdate = [];
+	self._isUpdating = false;
 	
 	OpenDB()
 	.done(function(s) {
 		self.db = s;
 		// listening to event
 		chrome.tabs.onActivated.addListener(function(activeInfo){
-			if(typeof activeInfo != undefined) {
-				chrome.tabs.get(activeInfo.tabId, function(tab){
-					console.log('tab active changed');
-					self.Update(tab.url);
-				});
-			}
+			chrome.tabs.get(activeInfo.tabId, function(tab){
+				if(typeof tab != 'undefined') {
+					if(typeof tab.url != 'undefined'){
+						self._enqueue(function(){
+							console.log('tab active changed', tab.url);
+							self.Update(tab.url);
+						});
+					}
+				}
+			});
 		});
 		chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-			if (changeInfo.status !== undefined && changeInfo.status == 'complete') {
-				console.log('tab address changed');
-				self.Update(tab.url);
+			if (changeInfo.status == 'complete' && typeof tab.url != 'undefined') {
+				chrome.tabs.query({
+					active: true
+				}, function(tabs) {
+					if(tabs.length == 1) {
+						chrome.tabs.get(tabs[0].id, function(t){
+							if(t.id == tab.id){
+								self._enqueue(function(){
+									console.log('tab address changed', t.url);
+									self.Update(t.url);
+								});
+							}
+						});
+					}						
+				});
 			}
 		});
 		chrome.windows.onFocusChanged.addListener(function(windowId){
@@ -34,17 +52,23 @@ function SurfRight() {
 			}, function(tabs) {
 				if(tabs.length == 1) {
 					chrome.tabs.get(tabs[0].id, function(tab){
-						console.log('windows active changed');
-						self.Update(tab.url);
+						if(typeof tab.url != 'undefined'){
+							self._enqueue(function(){
+								console.log('windows active changed', tab.url);
+								self.Update(tab.url);
+							});
+						}
 					});
 				}
 			});			
 		});
 		chrome.windows.onRemoved.addListener(function(windowId){
-			chrome.tabs.query({}, function(tabs){
-				if(tabs.length == 0) {
-					console.log(tabs.length, "tab(s) opening");
-					self.Update("not://valid/url");
+			chrome.windows.getAll({}, function(windows){
+				if(windows.length == 0) {
+					self._enqueue(function(){
+						console.log('browser closed')
+						self.Update("not://valid/url");
+					});
 				}
 			});
 		});
@@ -54,8 +78,27 @@ function SurfRight() {
 	});
 }
 
+
+SurfRight.prototype._nextUpdate = function() {
+	var self = this;
+	if(self._queueUpdate.length){
+		(self._queueUpdate.shift())();
+	}
+}
+
+SurfRight.prototype._enqueue = function(f) {
+	var self = this;
+	if(typeof f == 'function'){
+		self._queueUpdate.push(f);
+		if(!self._isUpdating && self._queueUpdate.length > 0){
+			self._nextUpdate();
+		}
+	}
+}
+
 SurfRight.prototype.LoadRule = function(hostname, callback) {
 	var self = this;
+	self._isUpdating = true;
 
 	self.db.rule
 	.get(hostname)
@@ -121,11 +164,24 @@ SurfRight.prototype.SaveUsage = function(hostname, done, fail) {
 
 SurfRight.prototype.validURL = function(url) {
 	if(url.protocol != "http:" && url.protocol != "https:") {
-		console.log("Invlaid protocol", url.protocol);
 		return false;
 	}
 
 	return true;
+};
+
+SurfRight.prototype.currentHostname = function(hostname) {
+	if(typeof hostname != 'undefined'){
+		if(hostname == 0) {
+			localStorage.removeItem('currentHostname');
+			return;
+		}
+
+		localStorage.setItem('currentHostname', hostname);
+		return;
+	}
+
+	return localStorage.getItem('currentHostname');
 };
 
 SurfRight.prototype.Update = function(url) {
@@ -142,26 +198,40 @@ SurfRight.prototype.Update = function(url) {
 			hostname = hostname.slice(4);
 		}
 	}
-
-	if(typeof self.currentHostname == 'undefined') {
+	
+	self._isUpdating = true;			
+	var currentHostname = self.currentHostname();
+	if(currentHostname == null) {
 		//begin for the new one
 		if(valid) {
 			self.SaveUsage(hostname, function(){
-				self.currentHostname = hostname;
+				self.currentHostname(hostname);
+				self._isUpdating = false;
+				self._nextUpdate();
 			});
+		}else{
+			self._isUpdating = false;
+			self._nextUpdate();
 		}
 	}else{
-		if(self.currentHostname != hostname) {
+		if(currentHostname != hostname) {
 			//update the record for the old tab
-			self.SaveUsage(self.currentHostname, function(){
+			self.SaveUsage(self.currentHostname(), function(){
 				if(valid) {
 					self.SaveUsage(hostname, function(){
-						self.currentHostname = hostname;
+						self.currentHostname(hostname);
+						self._isUpdating = false;
+						self._nextUpdate();
 					});
 				}else{
-					self.currentHostname = undefined;
+					self.currentHostname(0);
+					self._isUpdating = false;
+					self._nextUpdate();
 				}
 			});
+		}else{
+			self._isUpdating = false;
+			self._nextUpdate();		
 		}
 	}
 }

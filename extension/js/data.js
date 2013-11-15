@@ -35,20 +35,12 @@ function OpenDB() {
 
 function Duration(begin) {
 	if (begin !== undefined) {
-		this.begin = {
-			hour: begin.getUTCHours(),
-			minute: begin.getUTCMinutes(),
-			second: begin.getUTCSeconds()
-		};
+		this.begin = begin.getTime();
 	}
 }
 
 Duration.prototype.Stop = function(end) {
-	this.end = {
-		hour: end.getUTCHours(),
-		minute: end.getUTCMinutes(),
-		second: end.getUTCSeconds()
-	};
+	this.end = end.getTime();
 };
 
 /**
@@ -66,9 +58,7 @@ Duration.prototype.Closed = function() {
  */
 Duration.prototype.Sum = function() {
 	if (this.end !== undefined) {
-		var begin = this.begin.hour * 3600 + this.begin.minute * 60 + this.begin.second;
-		var end = this.end.hour * 3600 + this.end.minute * 60 + this.end.second;
-		return end - begin;
+		return this.end - this.begin;
 	}
 	return 0;
 };
@@ -115,8 +105,10 @@ Usage.prototype.Record = function() {
 	var current = new Date();
 	var lastRecord = this.records[this.records.length - 1];
 	if (lastRecord.Closed()) {
+		console.log('Closed')
 		this.records.push(new Duration(current));
 	} else {
+		console.log('Stop')
 		lastRecord.Stop(current);
 		this.sum += lastRecord.Sum();
 	}

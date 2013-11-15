@@ -280,10 +280,23 @@ function SiteManager(db, data) {
 	this.tool.lbl0.click(function() {
 		self.Save();
 	});
+	self.tool.lbl1.click(function() {
+		self.Delete();
+	});
 }
 
 SiteManager.prototype.Val = function() {
 	return this.data;
+};
+
+SiteManager.prototype.Delete = function() {
+	var self = this;
+
+	self.db.rule.remove(self.data.domain).done(function(){
+		self.element.remove();
+	}).fail(function(){
+		console.log('err');
+	});
 };
 
 SiteManager.prototype.Save = function() {
