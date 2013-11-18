@@ -1,11 +1,11 @@
-application: surf-right
+application: gcdc2013-surfright
 version: 1
 runtime: go
 api_version: go1
 
 handlers:
 
-- url: /login
+- url: /sync.html
   script: _go_app
   login: required
 

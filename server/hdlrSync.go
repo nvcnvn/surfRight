@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+func HandleSyncHTML(c *context) {
+
+}
+
 func HandleSync(c *context) {
 	u := user.Current(c.ctx)
 	if u == nil {
