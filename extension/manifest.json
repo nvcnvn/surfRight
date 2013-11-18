@@ -8,7 +8,8 @@
   
   "permissions": [
     "tabs",
-    "cookies"
+    "cookies",
+    "http://localhost:8080/*"
   ],
   "browser_action": {
     "default_icon": "img/icon.png",
@@ -22,8 +23,14 @@
       "js/data.js",
       "js/background.js"
     ],
-    "persistent": false
+    "persistent": true
   },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:8080/*"],
+      "js": ["js/libs/jquery-2.0.3.js", "js/auth.js"]
+    }
+  ],
   "offline_enabled": true,
   "options_page": "settings.html"
 }
