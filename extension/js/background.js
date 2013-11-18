@@ -5,6 +5,7 @@
 
 function SurfRight() {
 	var self = this;
+	var test = Date.now();
 
 	self.ignoreWWW = true;
 	self.openingDomains = [];
@@ -14,54 +15,39 @@ function SurfRight() {
 	OpenDB()
 	.done(function(s) {
 		self.db = s;
+		console.log('db connected', Date.now()-test);
 		// listening to event
 		chrome.tabs.onActivated.addListener(function(activeInfo){
-			chrome.tabs.get(activeInfo.tabId, function(tab){
-				if(typeof tab != 'undefined') {
-					if(typeof tab.url != 'undefined'){
-						self._enqueue(function(){
-							console.log('tab active changed', tab.url);
-							self.Update(tab.url);
-						});
-					}
-				}
+			self.GetViewingTab(function(tab){
+				self._enqueue(function(){
+					console.log('tab active changed', tab.url);
+					self.Update(tab.url);
+				});					
 			});
 		});
 		chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 			if (changeInfo.status == 'complete' && typeof tab.url != 'undefined') {
-				chrome.tabs.query({
-					active: true
-				}, function(tabs) {
-					if(tabs.length == 1) {
-						chrome.tabs.get(tabs[0].id, function(t){
-							if(t.id == tab.id){
-								self._enqueue(function(){
-									console.log('tab address changed', t.url);
-									self.Update(t.url);
-								});
-							}
-						});
-					}						
+				self.GetViewingTab(function(tab){
+					self._enqueue(function(){
+						console.log('tab address changed', tab.url);
+						self.Update(tab.url);
+					});
 				});
 			}
 		});
 		chrome.windows.onFocusChanged.addListener(function(windowId){
-			chrome.tabs.query({
-				active: true,
-				windowId: windowId
-			}, function(tabs) {
-				if(tabs.length == 1) {
-					chrome.tabs.get(tabs[0].id, function(tab){
-						if(typeof tab.url != 'undefined'){
-							self._enqueue(function(){
-								console.log('windows active changed', tab.url);
-								self.Update(tab.url);
-							});
-						}
-					});
-				}
-			});			
+			self.GetViewingTab(function(tab){
+				self._enqueue(function(){
+					console.log('windows active changed', tab.url);
+					self.Update(tab.url);
+				});
+			});
 		});
+
+		chrome.tabs.onRemoved.addListener(function(){
+
+		});
+
 		chrome.windows.onRemoved.addListener(function(windowId){
 			chrome.windows.getAll({}, function(windows){
 				if(windows.length == 0) {
@@ -77,6 +63,18 @@ function SurfRight() {
 		alert('Cannot connect to browser IndexedDB');
 	});
 }
+
+SurfRight.prototype.GetViewingTab = function(callback) {
+	chrome.tabs.query({
+		active: true,
+		lastFocusedWindow: true,
+		windowType: 'normal'
+	}, function(tabs) {
+		if(typeof callback == 'function' && tabs.length == 1) {
+			callback(tabs[0]);
+		}
+	});
+};
 
 
 SurfRight.prototype._nextUpdate = function() {
