@@ -96,9 +96,11 @@
             }
             
             //values are sorted numerically
-            values.sort(function (a, b) {
-                return b.value - a.value;
-            });
+            if (opts.sort !== false) {
+                values.sort(function (a, b) {
+                    return b.value - a.value;
+                });
+            }
             
             for (i = 0; i < len; i++) {
                 if (defcut && values[i] * 100 / total < minPercent) {
