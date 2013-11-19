@@ -5,23 +5,24 @@
 
 function SurfRight() {
 	var self = this;
-	var test = Date.now();
-
 	self.ignoreWWW = true;
 	self.openingDomains = [];
 	self._queueUpdate = [];
 	self._isUpdating = false;
-	
+	self._current = {
+		hostname: null,
+		timestamp: null
+	};
+
 	OpenDB()
 	.done(function(s) {
 		self.db = s;
-		console.log('db connected', Date.now()-test);
 		// listening to event
 		chrome.tabs.onActivated.addListener(function(activeInfo){
 			self.GetViewingTab(function(tab){
 				self._enqueue(function(){
 					console.log('tab active changed', tab.url);
-					self.Update(tab.url);
+					self.Update(Date.now(), tab.url);
 				});					
 			});
 		});
@@ -30,18 +31,25 @@ function SurfRight() {
 				self.GetViewingTab(function(tab){
 					self._enqueue(function(){
 						console.log('tab address changed', tab.url);
-						self.Update(tab.url);
+						self.Update(Date.now(), tab.url);
 					});
 				});
 			}
 		});
 		chrome.windows.onFocusChanged.addListener(function(windowId){
-			self.GetViewingTab(function(tab){
+			if(windowId == chrome.windows.WINDOW_ID_NONE){
 				self._enqueue(function(){
-					console.log('windows active changed', tab.url);
-					self.Update(tab.url);
+					console.log('all windows hided');
+					self.Update(Date.now(), "not://valid/url");
 				});
-			});
+			}else{
+				self.GetViewingTab(function(tab){
+					self._enqueue(function(){
+						console.log('windows active changed', tab.url);
+						self.Update(Date.now(), tab.url);
+					});
+				});
+			}
 		});
 
 		chrome.tabs.onRemoved.addListener(function(){
@@ -53,7 +61,7 @@ function SurfRight() {
 				if(windows.length == 0) {
 					self._enqueue(function(){
 						console.log('browser closed')
-						self.Update("not://valid/url");
+						self.Update(Date.now(), "not://valid/url");
 					});
 				}
 			});
@@ -96,7 +104,6 @@ SurfRight.prototype._enqueue = function(f) {
 
 SurfRight.prototype.LoadRule = function(hostname, callback) {
 	var self = this;
-	self._isUpdating = true;
 
 	self.db.rule
 	.get(hostname)
@@ -124,42 +131,6 @@ SurfRight.prototype.LoadRule = function(hostname, callback) {
 	});	
 };
 
-SurfRight.prototype.SaveUsage = function(hostname, done, fail) {
-	var self = this;
-
-	self.db.usage
-	.get([hostname, getDayUTC(new Date())])
-	.done(function(usage) {
-		if(typeof usage == 'undefined') {
-			//Insert new Usage to database
-			self.db.usage.add(new Usage(hostname))
-			.done(function(){
-				if(typeof done == 'function') done();
-			})
-			.fail(function(){
-				if(typeof fail == 'function') fail();
-			});
-		}else{
-			//Update saved usage of the day
-			self.db.usage.update(Usage.fromObj(usage).Record())
-			.done(function(){
-				if(typeof done == 'function') done();
-			})
-			.fail(function(){
-				if(typeof fail == 'function') fail();
-			});
-		}
-	}).fail(function(){
-		self.db.usage.add(hostname)
-		.done(function(){
-			if(typeof done == 'function') done();
-		})
-		.fail(function(){
-			if(typeof fail == 'function') fail();
-		});
-	});
-};
-
 SurfRight.prototype.validURL = function(url) {
 	if(url.protocol != "http:" && url.protocol != "https:") {
 		return false;
@@ -168,21 +139,7 @@ SurfRight.prototype.validURL = function(url) {
 	return true;
 };
 
-SurfRight.prototype.currentHostname = function(hostname) {
-	if(typeof hostname != 'undefined'){
-		if(hostname == 0) {
-			localStorage.removeItem('currentHostname');
-			return;
-		}
-
-		localStorage.setItem('currentHostname', hostname);
-		return;
-	}
-
-	return localStorage.getItem('currentHostname');
-};
-
-SurfRight.prototype.Update = function(url) {
+SurfRight.prototype.Update = function(timestamp, url) {
 	var self = this; 
 
 	var a = document.createElement('a');
@@ -197,40 +154,61 @@ SurfRight.prototype.Update = function(url) {
 		}
 	}
 	
+	var fnUpdateNext = function(){
+		self._isUpdating = false;
+		self._nextUpdate();					
+	};
+	var fnUpdateNextOK = function(){
+		if(valid){
+			self._current.hostname = hostname;
+			self._current.timestamp = timestamp;
+		}else{
+			self._current.hostname = null;
+			self._current.timestamp = null;
+		}
+		fnUpdateNext();
+	};
+	var fnNewUsage = function(hostname, timestamp, duration){
+		var u = new Usage(hostname);
+		u.Record('local', (new Date(timestamp)).getUTCHours(), duration);
+		return u;
+	};
+
 	self._isUpdating = true;			
-	var currentHostname = self.currentHostname();
-	if(currentHostname == null) {
+	if(self._current.hostname == null){
 		//begin for the new one
 		if(valid) {
-			self.SaveUsage(hostname, function(){
-				self.currentHostname(hostname);
-				self._isUpdating = false;
-				self._nextUpdate();
-			});
-		}else{
-			self._isUpdating = false;
-			self._nextUpdate();
+			self._current.hostname = hostname;
+			self._current.timestamp = timestamp;
 		}
+		fnUpdateNext();
+	}else if(self._current.hostname != hostname){
+		var duration = timestamp - self._current.timestamp;
+
+		self.db.usage
+		.get([self._current.hostname, getDayUTC(new Date(timestamp))])
+		.done(function(usage) {
+			if(typeof usage == 'undefined') {
+				//Insert new Usage to database
+				self.db.usage.add(fnNewUsage(self._current.hostname, timestamp, duration))
+				.done(fnUpdateNextOK)
+				.fail(fnUpdateNext);
+			}else{
+				//Update saved usage of the day
+				var u = Usage.fromObj(usage);
+				u.Record('local', (new Date(timestamp)).getUTCHours(), duration);
+
+				self.db.usage.update(u)
+				.done(fnUpdateNextOK)
+				.fail(fnUpdateNext);
+			}
+		}).fail(function(){
+			self.db.usage.add(fnNewUsage(self._current.hostname, timestamp, duration))
+			.done(fnUpdateNextOK)
+			.fail(fnUpdateNext);
+		});
 	}else{
-		if(currentHostname != hostname) {
-			//update the record for the old tab
-			self.SaveUsage(self.currentHostname(), function(){
-				if(valid) {
-					self.SaveUsage(hostname, function(){
-						self.currentHostname(hostname);
-						self._isUpdating = false;
-						self._nextUpdate();
-					});
-				}else{
-					self.currentHostname(0);
-					self._isUpdating = false;
-					self._nextUpdate();
-				}
-			});
-		}else{
-			self._isUpdating = false;
-			self._nextUpdate();		
-		}
+		fnUpdateNext();
 	}
 }
 

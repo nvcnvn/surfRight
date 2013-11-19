@@ -25,11 +25,12 @@ function StatisticManager() {
 			var pipeHref = []
 
 			for(var i = 0; i < n; i++) {
-				pipeOther -= d.data[i].sum;
-				pipeData.push(d.data[i].sum);
+				var sum = d.data[i].sum;
+				pipeOther -= sum;
+				pipeData.push(sum);
 				pipeHref.push('http://'+d.data[i].hostname);
 				pipeLegend.push('%%.%% '+d.data[i].hostname);
-				datas.push([d.data[i].sum]);
+				datas.push([sum]);
 				labels.push([d.data[i].hostname]);
 			}
 
@@ -124,9 +125,9 @@ StatisticManager.prototype.LoadData = function(by, callback) {
 				}
 
 				if(typeof lookup[hostname] == 'undefined'){
-					lookup[hostname] = usages[i].sum;
+					lookup[hostname] = usages[i].sum.sync + usages[i].sum.local;
 				}else{
-					lookup[hostname] += usages[i].sum;
+					lookup[hostname] += usages[i].sum.sync + usages[i].sum.local;
 				}
 			}
 

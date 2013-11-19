@@ -29,42 +29,6 @@ function OpenDB() {
 
 /**
  * @constructor
- * @param {Date} the created time
- * @struct
- */
-
-function Duration(begin) {
-	if (begin !== undefined) {
-		this.begin = begin.getTime();
-	}
-}
-
-Duration.prototype.Stop = function(end) {
-	this.end = end.getTime();
-};
-
-/**
- * @return {boolean}
- */
-Duration.prototype.Closed = function() {
-	if (this.end !== undefined) {
-		return true;
-	}
-	return false;
-};
-
-/**
- * @return {int}
- */
-Duration.prototype.Sum = function() {
-	if (this.end !== undefined) {
-		return this.end - this.begin;
-	}
-	return 0;
-};
-
-/**
- * @constructor
  * @param {string} domain of the website
  * @struct
  */
@@ -75,8 +39,18 @@ function Usage(domain) {
 	this.timestamp = current.getTime();
 	this.timestr = current.toUTCString();
 	this.domain = domain;
-	this.sum = 0;
-	this.records = [new Duration(current)];
+	this.sum = {
+		sync: 0,
+		local: 0
+	};
+	this.records = {
+		sync: [],
+		local: []
+	};
+	for(var i=0;i<24;i++) {
+		this.records.sync.push(0);
+		this.records.local.push(0);
+	}
 }
 
 Usage.fromObj = function(obj) {
@@ -85,15 +59,7 @@ Usage.fromObj = function(obj) {
 	u.timestamp = obj.timestamp;
 	u.domain = obj.domain;
 	u.sum = obj.sum;
-	u.records = new Array();
-	$.each(obj.records, function(idx, item) {
-		var d = new Duration()
-		d.begin = item.begin;
-		if (item.end !== undefined) {
-			d.end = item.end;
-		}
-		u.records.push(d);
-	})
+	u.records = obj.records;
 
 	return u;
 }
@@ -101,16 +67,13 @@ Usage.fromObj = function(obj) {
 /**
  * @return {Usage}
  */
-Usage.prototype.Record = function() {
-	var current = new Date();
-	var lastRecord = this.records[this.records.length - 1];
-	if (lastRecord.Closed()) {
-		console.log('Closed')
-		this.records.push(new Duration(current));
-	} else {
-		console.log('Stop')
-		lastRecord.Stop(current);
-		this.sum += lastRecord.Sum();
+Usage.prototype.Record = function(where, when, duration) {
+	if(where == "sync"){
+		this.records.sync[when] += duration;
+		this.sum.sync += duration;
+	}else{
+		this.records.local[when] += duration;
+		this.sum.local += duration;
 	}
 	return this;
 };
