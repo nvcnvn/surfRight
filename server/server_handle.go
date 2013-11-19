@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"github.com/kidstuff/toys"
 	"github.com/kidstuff/toys/view"
+	"github.com/nvcnvn/surfRight/server/model"
 	"net/http"
 	"path"
 )
@@ -18,6 +19,7 @@ type context struct {
 	toys.Context
 	tmpl *view.View
 	ctx  appengine.Context
+	db   model.DataManager
 }
 
 func (c *context) View(page string, data interface{}) error {
@@ -58,6 +60,7 @@ func (h *handler) newcontext(w http.ResponseWriter, r *http.Request) context {
 	c.SetPath(h.path)
 	c.tmpl = h.tmpl
 	c.ctx = appengine.NewContext(r)
+	c.db = model.NewAppEngineDB(c.ctx)
 	return c
 }
 
