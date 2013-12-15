@@ -14,6 +14,11 @@ function SurfRight() {
 		timestamp: null
 	};
 
+	if(localStorage.getItem('lastSync') == null) {
+		//the first time extension run, setup some setting
+		localStorage.setItem('ignoreWWW', true);
+	}
+
 	OpenDB()
 	.done(function(s) {
 		self.db = s;
@@ -65,6 +70,18 @@ function SurfRight() {
 					});
 				}
 			});
+		});
+
+		chrome.alarms.create("surfRight", {
+			periodInMinutes: 1
+		});
+		chrome.alarms.onAlarm.addListener(function(alarm){
+			self.GetViewingTab(function(tab){
+				self._enqueue(function(){
+					console.log('windows active changed', tab.url);
+					self.Update(Date.now(), tab.url);
+				});
+			});			
 		});
 	})
 	.fail(function() {
