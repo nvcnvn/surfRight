@@ -9,7 +9,8 @@
   "permissions": [
     "tabs",
     "cookies",
-    "http://localhost:8080/*"
+    "http://localhost:8080/*",
+    "alarms"
   ],
   "icons": {
     "16": "img/icon16.png",
@@ -28,7 +29,7 @@
       "js/data.js",
       "js/background.js"
     ],
-    "persistent": true
+    "persistent": false
   },
   "content_scripts": [
     {
