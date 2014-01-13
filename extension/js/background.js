@@ -10,7 +10,17 @@ function SurfRight() {
 	self._queueUpdate = [];
 	self._isUpdating = false;
 	self._current = {
-		hostname: null,
+		hostname: function(h){
+			if(typeof h != 'undefined'){
+				if(h===null){
+					localStorage.removeItem('currentHostname');
+				}else{
+					localStorage.setItem('currentHostname', h);
+				}
+			}
+
+			return localStorage.getItem('currentHostname');
+		},
 		timestamp: null
 	};
 
@@ -78,7 +88,7 @@ function SurfRight() {
 		chrome.alarms.onAlarm.addListener(function(alarm){
 			self.GetViewingTab(function(tab){
 				self._enqueue(function(){
-					console.log('windows active changed', tab.url);
+					console.log('one minute away...', tab.url);
 					self.Update(Date.now(), tab.url);
 				});
 			});			
@@ -177,10 +187,10 @@ SurfRight.prototype.Update = function(timestamp, url) {
 	};
 	var fnUpdateNextOK = function(){
 		if(valid){
-			self._current.hostname = hostname;
+			self._current.hostname(hostname);
 			self._current.timestamp = timestamp;
 		}else{
-			self._current.hostname = null;
+			self._current.hostname(null);
 			self._current.timestamp = null;
 		}
 		fnUpdateNext();
@@ -192,22 +202,22 @@ SurfRight.prototype.Update = function(timestamp, url) {
 	};
 
 	self._isUpdating = true;			
-	if(self._current.hostname == null){
+	if(self._current.hostname() == null){
 		//begin for the new one
 		if(valid) {
-			self._current.hostname = hostname;
+			self._current.hostname(hostname);
 			self._current.timestamp = timestamp;
 		}
 		fnUpdateNext();
-	}else if(self._current.hostname != hostname){
+	}else if(self._current.hostname() != hostname){
 		var duration = timestamp - self._current.timestamp;
 
 		self.db.usage
-		.get([self._current.hostname, getDayUTC(new Date(timestamp))])
+		.get([self._current.hostname(), getDayUTC(new Date(timestamp))])
 		.done(function(usage) {
 			if(typeof usage == 'undefined') {
 				//Insert new Usage to database
-				self.db.usage.add(fnNewUsage(self._current.hostname, timestamp, duration))
+				self.db.usage.add(fnNewUsage(self._current.hostname(), timestamp, duration))
 				.done(fnUpdateNextOK)
 				.fail(fnUpdateNext);
 			}else{
@@ -220,7 +230,7 @@ SurfRight.prototype.Update = function(timestamp, url) {
 				.fail(fnUpdateNext);
 			}
 		}).fail(function(){
-			self.db.usage.add(fnNewUsage(self._current.hostname, timestamp, duration))
+			self.db.usage.add(fnNewUsage(self._current.hostname(), timestamp, duration))
 			.done(fnUpdateNextOK)
 			.fail(fnUpdateNext);
 		});
