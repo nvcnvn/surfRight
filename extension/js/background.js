@@ -11,17 +11,11 @@ function SurfRight() {
 	self._isUpdating = false;
 	self._current = {
 		hostname: function(h){
-			if(typeof h != 'undefined'){
-				if(h===null){
-					localStorage.removeItem('currentHostname');
-				}else{
-					localStorage.setItem('currentHostname', h);
-				}
-			}
-
-			return localStorage.getItem('currentHostname');
+			return localStorageSetGet('currentHostname', h);
 		},
-		timestamp: null
+		timestamp: function(t) {
+			return localStorageSetGet('currentTimestamp', t);
+		}
 	};
 
 	if(localStorage.getItem('lastSync') == null) {
@@ -51,6 +45,7 @@ function SurfRight() {
 				});
 			}
 		});
+
 		chrome.windows.onFocusChanged.addListener(function(windowId){
 			if(windowId == chrome.windows.WINDOW_ID_NONE){
 				self._enqueue(function(){
@@ -65,21 +60,6 @@ function SurfRight() {
 					});
 				});
 			}
-		});
-
-		chrome.tabs.onRemoved.addListener(function(){
-
-		});
-
-		chrome.windows.onRemoved.addListener(function(windowId){
-			chrome.windows.getAll({}, function(windows){
-				if(windows.length == 0) {
-					self._enqueue(function(){
-						console.log('browser closed')
-						self.Update(Date.now(), "not://valid/url");
-					});
-				}
-			});
 		});
 
 		chrome.alarms.create("surfRight", {
@@ -188,10 +168,10 @@ SurfRight.prototype.Update = function(timestamp, url) {
 	var fnUpdateNextOK = function(){
 		if(valid){
 			self._current.hostname(hostname);
-			self._current.timestamp = timestamp;
+			self._current.timestamp(timestamp);
 		}else{
 			self._current.hostname(null);
-			self._current.timestamp = null;
+			self._current.timestamp(null);
 		}
 		fnUpdateNext();
 	};
@@ -203,14 +183,14 @@ SurfRight.prototype.Update = function(timestamp, url) {
 
 	self._isUpdating = true;			
 	if(self._current.hostname() == null){
-		//begin for the new one
+		//begin for the new session
 		if(valid) {
 			self._current.hostname(hostname);
-			self._current.timestamp = timestamp;
+			self._current.timestamp(timestamp);
 		}
 		fnUpdateNext();
-	}else if(self._current.hostname() != hostname){
-		var duration = timestamp - self._current.timestamp;
+	}else{
+		var duration = timestamp - self._current.timestamp();
 
 		self.db.usage
 		.get([self._current.hostname(), getDayUTC(new Date(timestamp))])
@@ -234,8 +214,6 @@ SurfRight.prototype.Update = function(timestamp, url) {
 			.done(fnUpdateNextOK)
 			.fail(fnUpdateNext);
 		});
-	}else{
-		fnUpdateNext();
 	}
 }
 

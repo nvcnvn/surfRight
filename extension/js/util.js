@@ -46,3 +46,15 @@ function milisecondToString(m){
 		return Math.floor(m/1000) + " second";
 	}
 }
+
+function localStorageSetGet(key, val) {
+	if(typeof val != 'undefined'){
+		if(val===null){
+			localStorage.removeItem(key);
+		}else{
+			localStorage.setItem(key, val);
+		}
+	}
+
+	return localStorage.getItem(key);	
+}
