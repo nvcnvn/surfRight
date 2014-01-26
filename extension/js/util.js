@@ -58,3 +58,15 @@ function localStorageSetGet(key, val) {
 
 	return localStorage.getItem(key);	
 }
+
+function sessionStorageSetGet(key, val) {
+	if(typeof val != 'undefined'){
+		if(val===null){
+			sessionStorage.removeItem(key);
+		}else{
+			sessionStorage.setItem(key, val);
+		}
+	}
+
+	return sessionStorage.getItem(key);	
+}

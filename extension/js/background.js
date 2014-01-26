@@ -11,10 +11,10 @@ function SurfRight() {
 	self._isUpdating = false;
 	self._current = {
 		hostname: function(h){
-			return localStorageSetGet('currentHostname', h);
+			return sessionStorageSetGet('currentHostname', h);
 		},
 		timestamp: function(t) {
-			return localStorageSetGet('currentTimestamp', t);
+			return sessionStorageSetGet('currentTimestamp', t);
 		}
 	};
 
