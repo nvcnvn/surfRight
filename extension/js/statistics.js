@@ -31,7 +31,8 @@ function StatisticManager() {
 
 		    $('#cTop').highcharts({
 		        chart: {
-		            type: 'bar'
+		            type: 'bar',
+		            backgroundColor: '#ddd'
 		        },
 		        title: {
 				    text: '',
@@ -44,7 +45,16 @@ function StatisticManager() {
 		            title: {
 		                text: null
 		            },
-		            reversed: true
+		            reversed: true,
+		            labels: {
+		            	x: 5,
+		            	y: 5,
+	                    align: 'left',
+	                    style: {
+	                        fontSize: '1.5em',
+	                        color: 'white'
+	                    }
+	                }
 		        },
 		        yAxis: {
 		            min: 0,
@@ -103,8 +113,11 @@ StatisticManager.prototype.LoadData = function(by, callback) {
 	case "week":
 		before = getWeekUTC(current);
 		break;
-	default:
+	case "month":
 		before = getMonthUTC(current);
+		break;
+	default:
+		before = 0;
 	}
 
 	self.db.usage
@@ -167,4 +180,7 @@ StatisticManager.prototype.LoadData = function(by, callback) {
 var mngr;
 $(function(){
 	mngr = new StatisticManager();
+	$('#btShow').click(function(){
+		$('#sidebar').hide();
+	});
 })

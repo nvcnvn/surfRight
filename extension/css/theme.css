@@ -1,3 +1,6 @@
+html, body {
+	background-color: #eee;
+}
 #sidebar {
 	background-color: #bbd8e9;
 }
@@ -6,4 +9,7 @@
 }
 .block {
 	display: block;
+}
+.chart{
+	height:85vh;
 }

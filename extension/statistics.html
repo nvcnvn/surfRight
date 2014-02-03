@@ -15,7 +15,35 @@
 	<title>surfRight Statistics</title>
 </head>
 <body>
-	<div id="cTop" style="height:100vh"></div>
-	<div id="cMiddle"></div>
+	<div class="accordion" id="accordion2">
+		<div class="accordion-group">
+			<div class="accordion-heading">
+				<a class="accordion-toggle" data-toggle="collapse" href="#collapseOne">
+				<i class="icon-th"></i>Advanced
+				</a>
+			</div>
+			<div id="collapseOne" class="accordion-body collapse">
+				<div class="accordion-inner">
+				Anim pariatur cliche...
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="myCarousel" class="carousel slide">
+		<ol class="carousel-indicators">
+			<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+			<li data-target="#myCarousel" data-slide-to="1"></li>
+		</ol>
+		<!-- Carousel items -->
+		<div class="carousel-inner">
+			<div class="active item">
+				<div class="chart" id="cTop"></div>
+			</div>
+			<div class="item">
+				<div class="chart" id="cMiddle"></div>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
