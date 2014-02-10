@@ -345,7 +345,7 @@ SiteManager.prototype.AddLabelInstruction = function(rule) {
 		}
 
 		if(typeof rule.when == 'number') {
-			l.sltRule.find('option:eq('+ rule.level +')').prop('selected', true);
+			l.sltRule.find('option:eq('+ rule.when +')').prop('selected', true);
 		}
 
 		if(typeof rule.amount == 'number') {

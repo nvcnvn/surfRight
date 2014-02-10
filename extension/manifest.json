@@ -10,7 +10,8 @@
     "tabs",
     "cookies",
     "http://localhost:8080/*",
-    "alarms"
+    "alarms",
+    "activeTab"
   ],
   "icons": {
     "16": "img/icon16.png",
@@ -35,6 +36,11 @@
     {
       "matches": ["http://localhost:8080/*"],
       "js": ["js/libs/jquery-2.0.3.js", "js/auth.js"]
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/warning.js"],
+      "css": ["css/modal.css"]
     }
   ],
   "offline_enabled": true,

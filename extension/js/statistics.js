@@ -4,100 +4,103 @@ function StatisticManager() {
 	OpenDB()
 	.done(function(s) {
 		self.db = s;
-		self.LoadData("all", function(d){
-			var n = (10 <= d.data.length)?10:d.data.length;
-
-			var nBarData = [];
-			var nBarCol = [];
-
-			var pipeData = [];
-			var pipeOther = d.total;
-			var pipeLegend = [];
-			var pipeHref = []
-
-			for(var i = 0; i < n; i++) {
-				var sum = d.data[i].sum;
-				pipeOther -= sum;
-				pipeData.push(sum);
-				pipeHref.push('http://'+d.data[i].hostname);
-				pipeLegend.push('%%.%% '+d.data[i].hostname);
-
-				nBarCol.push(d.data[i].hostname);
-				nBarData.push(sum);
-			}
-
-			pipeLegend.push('%%.%% Others');
-			pipeData.push(pipeOther);
-
-		    $('#cTop').highcharts({
-		        chart: {
-		            type: 'bar',
-		            backgroundColor: '#ddd'
-		        },
-		        title: {
-				    text: '',
-				    style: {
-				        display: 'none'
-				    }
-		        },
-		        xAxis: {
-		        	categories: nBarCol,
-		            title: {
-		                text: null
-		            },
-		            reversed: true,
-		            labels: {
-		            	x: 5,
-		            	y: 5,
-	                    align: 'left',
-	                    style: {
-	                        fontSize: '1.5em',
-	                        color: 'white'
-	                    }
-	                }
-		        },
-		        yAxis: {
-		            min: 0,
-		            title: {
-		                text: 'time',
-		                align: 'high'
-		            },
-		            labels: {
-		                enabled: false
-		            }
-		        },
-		        tooltip: {
-		            formatter: function() {
-		            	return milisecondToString(this.y);
-		            }
-		        },
-		        plotOptions: {
-		            bar: {
-		                colorByPoint: true
-		            }
-		        },
-		        legend: {
-		            layout: 'vertical',
-		            align: 'right',
-		            verticalAlign: 'top',
-		            x: -40,
-		            y: 100,
-		            floating: true,
-		            borderWidth: 1,
-		            backgroundColor: '#FFFFFF',
-		            shadow: true
-		        },
-		        credits: {
-		            enabled: false
-		        },
-		        series: [{showInLegend: false, data:nBarData}]
-		    });
-		})
+		self.LoadData("all", self.DrawChart)
 	})
 	.fail(function() {
 		alert('Cannot connect to browser IndexedDB');
 	});
 }
+
+StatisticManager.prototype.DrawChart = function(d) {
+	var n = (10 <= d.data.length)?10:d.data.length;
+
+	var nBarData = [];
+	var nBarCol = [];
+
+	var pipeData = [];
+	var pipeOther = d.total;
+	var pipeLegend = [];
+	var pipeHref = []
+
+	for(var i = 0; i < n; i++) {
+		var sum = d.data[i].sum;
+		pipeOther -= sum;
+		pipeData.push(sum);
+		pipeHref.push('http://'+d.data[i].hostname);
+		pipeLegend.push('%%.%% '+d.data[i].hostname);
+
+		nBarCol.push(d.data[i].hostname);
+		nBarData.push(sum);
+	}
+
+	pipeLegend.push('%%.%% Others');
+	pipeData.push(pipeOther);
+
+    $('#cTop').highcharts({
+        chart: {
+            type: 'bar',
+            backgroundColor: '#ddd'
+        },
+        title: {
+		    text: '',
+		    style: {
+		        display: 'none'
+		    }
+        },
+        xAxis: {
+        	categories: nBarCol,
+            title: {
+                text: null
+            },
+            reversed: true,
+            labels: {
+            	x: 5,
+            	y: 5,
+                align: 'left',
+                style: {
+                    fontSize: '1.5em',
+                    color: 'white'
+                }
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'time',
+                align: 'high'
+            },
+            labels: {
+                enabled: false
+            }
+        },
+        tooltip: {
+            formatter: function() {
+            	return milisecondToString(this.y);
+            }
+        },
+        plotOptions: {
+            bar: {
+                colorByPoint: true
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'top',
+            x: -40,
+            y: 100,
+            floating: true,
+            borderWidth: 1,
+            backgroundColor: '#FFFFFF',
+            shadow: true
+        },
+        credits: {
+            enabled: false
+        },
+        series: [{showInLegend: false, data:nBarData}]
+    });
+			
+};
 
 StatisticManager.prototype.LoadData = function(by, callback) {
 	var self = this;
@@ -180,7 +183,7 @@ StatisticManager.prototype.LoadData = function(by, callback) {
 var mngr;
 $(function(){
 	mngr = new StatisticManager();
-	$('#btShow').click(function(){
-		$('#sidebar').hide();
+	$('#slRange').change(function(){
+		mngr.LoadData($(this).val(), mngr.DrawChart);
 	});
 })

@@ -63,12 +63,13 @@ function SurfRight() {
 		});
 
 		chrome.alarms.create("surfRight", {
-			periodInMinutes: 1
+			periodInMinutes: 1.0
 		});
+
 		chrome.alarms.onAlarm.addListener(function(alarm){
 			self.GetViewingTab(function(tab){
 				self._enqueue(function(){
-					console.log('one minute away...', tab.url);
+					console.log('one minute away...', Date.now(), tab.url);
 					self.Update(Date.now(), tab.url);
 				});
 			});			
@@ -131,7 +132,7 @@ SurfRight.prototype.LoadRule = function(hostname, callback) {
 				console.log('falied to query hostname on aliases');
 			});
 		}else{
-			callback(rules);
+			callback(rule);
 		}
 	}).fail(function(){
 		console.log('falied to get hostname');
@@ -166,6 +167,109 @@ SurfRight.prototype.Update = function(timestamp, url) {
 		self._nextUpdate();					
 	};
 	var fnUpdateNextOK = function(){
+		//LoadRule and then check
+		self.LoadRule(self._current.hostname(), function(rule){
+			if(typeof rule == 'undefined' || rule.instructions.length == 0) {
+				return
+			}
+
+			var milestone = {
+				month: false,
+				week: false,
+				day: false
+			};
+
+			for(var i = 0; i < rule.instructions.length; i++){
+				var when = rule.instructions[i].when;
+				if(when == BLOCK_WHEN.MONTH) {
+					milestone.month = true;
+				}else if(when == BLOCK_WHEN.WEEK){
+					milestone.week = true;
+				}else if(when == BLOCK_WHEN.DAY){
+					milestone.day = true;
+				}
+			}
+
+			var now = new Date();
+			var sinceMonth = getMonthUTC(now);
+			var sinceWeek = getWeekUTC(now);
+			var sinceDay = getDayUTC(now);
+			var since;
+			if(milestone.month) {
+				since = sinceMonth;
+			}else if(milestone.week) {
+				since = sinceWeek;
+			}else{
+				since = sinceDay;
+			}
+
+			self.db.usage
+			.query('timestamp')
+			.lowerBound(since)
+			.filter(function(usage){
+				var in_aliases = false;
+				for(var i = 0; i < rule.aliases.length; i++) {
+					if(usage.domain == rule.aliases[i]) {
+						in_aliases = true;
+						break;
+					}
+				}
+				return usage.domain == rule.domain || in_aliases;
+			})
+			.execute()
+			.done(function(usages){
+				var sum = {
+					month: 0,
+					week: 0,
+					day: 0
+				};
+
+				for(var i = 0; i < usages.length; i++){
+					var total = usages[i].sum.local + usages[i].sum.sync;
+					sum.month += total;
+					if(usages.timestamp >= sinceWeek) {
+						sum.week +=total;
+					}
+					if(usages.timestamp >= sinceDay) {
+						sum.day += total;
+					}
+				}
+
+				self.GetViewingTab(function(tab){
+					for(var i = 0; i < rule.instructions.length; i++){
+						var when = rule.instructions[i].when;
+						var amount = rule.instructions[i].amount*60*1000;
+
+						if(when == BLOCK_WHEN.MONTH) {
+							if(amount<=sum.month){
+								chrome.tabs.sendMessage(tab.id, {
+									instructions: rule.instructions[i],
+									amount: amount
+								});
+								break;
+							}
+						}else if(when == BLOCK_WHEN.WEEK){
+							if(amount<=sum.week){
+								chrome.tabs.sendMessage(tab.id, {
+									instructions: rule.instructions[i],
+									amount: amount
+								});
+								break;
+							}
+						}else if(when == BLOCK_WHEN.DAY){
+							if(amount<=sum.day){
+								chrome.tabs.sendMessage(tab.id, {
+									instructions: rule.instructions[i],
+									amount: amount
+								});
+								break;
+							}
+						}
+					}
+				});
+			})
+		});
+
 		if(valid){
 			self._current.hostname(hostname);
 			self._current.timestamp(timestamp);
