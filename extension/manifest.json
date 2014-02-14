@@ -39,7 +39,7 @@
     },
     {
       "matches": ["<all_urls>"],
-      "js": ["js/warning.js"],
+      "js": ["js/data.js", "js/warning.js"],
       "css": ["css/modal.css"]
     }
   ],

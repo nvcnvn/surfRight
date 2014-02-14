@@ -1,19 +1,37 @@
 function surfRightModalWarning(){
 	var WARNING_BOX = document.createElement('div');
 	WARNING_BOX.setAttribute('id', 'surfRightModalWarning');
-	WARNING_BOX.innerHTML = '<div><h2>WARNING!!!</h2><p>aaaa</p></div>'
+	WARNING_BOX.innerHTML = '<div><a id="surfRightModalWarningClose">X</a><h2 id="surfRightModalWarningTitle"></h2><p id="surfRightModalWarningMessage"></p></div>'
 	document.body.appendChild(WARNING_BOX);
 
-	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-		// console.log(sender.tab ?
-		// "from a content script:" + sender.tab.url :
-		// "from the extension");
-		// if (request.greeting == "hello")
-		// 	sendResponse({farewell: "goodbye"});
-		if(window.location.hostname == request.hostname) {
+	var btClose = document.getElementById('surfRightModalWarningClose');
+	btClose.addEventListener('click', function(){
+		WARNING_BOX.style.opacity = 0;
+		WARNING_BOX.style.pointerEvents = 'none';
+	}, false);
 
+	chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+		var hostname = window.location.hostname;
+		if(request.ignoreWWW) {
+			if(hostname.indexOf("www.") == 0) {
+				hostname = hostname.slice(4);
+			}
 		}
-		document.getElementById("surfRightModalWarning").style.opacity = 1;
+
+		if(hostname == request.hostname) {
+			if(request.instructions.level == BLOCK_LEVEL.STOP) {
+				document.getElementById('surfRightModalWarningTitle')
+				.innerText = 'STOP!!!'
+				document.getElementById('surfRightModalWarningMessage')
+				.innerText = 'Your time for '+hostname+' now over '+(request.instructions.amount/60)+' hours';
+				btClose.style.display = 'none';
+			}else{
+				btClose.style.display = 'inline';
+			}
+
+			WARNING_BOX.style.opacity = 1;
+			WARNING_BOX.style.pointerEvents = 'auto';
+		}
 	});	
 }
 

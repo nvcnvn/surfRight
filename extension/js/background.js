@@ -1,3 +1,10 @@
+chrome.runtime.onInstalled.addListener(function(details){
+	if(details.reason == 'install') {
+		localStorage.setItem('ignoreWWW', true);
+	}
+})
+
+
 /**
  * @constructor
  * @struct
@@ -17,11 +24,6 @@ function SurfRight() {
 			return sessionStorageSetGet('currentTimestamp', t);
 		}
 	};
-
-	if(localStorage.getItem('lastSync') == null) {
-		//the first time extension run, setup some setting
-		localStorage.setItem('ignoreWWW', true);
-	}
 
 	OpenDB()
 	.done(function(s) {
@@ -240,28 +242,28 @@ SurfRight.prototype.Update = function(timestamp, url) {
 						var when = rule.instructions[i].when;
 						var amount = rule.instructions[i].amount*60*1000;
 
+						var sendMessage = function() {
+							chrome.tabs.sendMessage(tab.id, {
+								instructions: rule.instructions[i],
+								amount: amount,
+								ignoreWWW: localStorage.getItem('ignoreWWW'),
+								hostname: usages[0].domain
+							});							
+						}
+
 						if(when == BLOCK_WHEN.MONTH) {
 							if(amount<=sum.month){
-								chrome.tabs.sendMessage(tab.id, {
-									instructions: rule.instructions[i],
-									amount: amount
-								});
+								sendMessage();
 								break;
 							}
 						}else if(when == BLOCK_WHEN.WEEK){
 							if(amount<=sum.week){
-								chrome.tabs.sendMessage(tab.id, {
-									instructions: rule.instructions[i],
-									amount: amount
-								});
+								sendMessage();
 								break;
 							}
 						}else if(when == BLOCK_WHEN.DAY){
 							if(amount<=sum.day){
-								chrome.tabs.sendMessage(tab.id, {
-									instructions: rule.instructions[i],
-									amount: amount
-								});
+								sendMessage();
 								break;
 							}
 						}
