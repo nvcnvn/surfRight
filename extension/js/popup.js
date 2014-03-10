@@ -19,6 +19,10 @@ PopupManager.prototype.Display = function(container) {
 		lastFocusedWindow: true,
 		windowType: 'normal'
 	}, function(tabs) {
+		if(tabs.length == 0) {
+			return
+		}
+
 		var a = document.createElement('a');
 		a.href = tabs[0].url;
 		var hostname= a.hostname;
@@ -28,14 +32,82 @@ PopupManager.prototype.Display = function(container) {
 			}
 		}
 		if(hostname != null && hostname.length > 3){
-			self.db.usage.get([hostname, getDayUTC(new Date())])
-			.done(function(usage){
-				$(container).html(hostname);
-			}).fail(function(){
+			$(container).html(hostname);
 
+			$('#amountDay').html('aaaaaaaaa');
+			var now = new Date();
+			var sinceMonth = getMonthUTC(now);
+			var sinceWeek = getWeekUTC(now);
+			var sinceDay = getDayUTC(now);
+			self.db.usage
+			.query('timestamp')
+			.lowerBound(sinceMonth)
+			.filter(function(usage){
+				var in_aliases = false;
+				self.LoadRule(hostname, function(rule){
+					for(var i = 0; i < rule.aliases.length; i++) {
+						if(usage.domain == rule.aliases[i]) {
+							in_aliases = true;
+							break;
+						}
+					}
+				});
+				return usage.domain == hostname || in_aliases;
+			})
+			.execute()
+			.done(function(usages){
+				var sum = {
+					month: 0,
+					week: 0,
+					day: 0
+				};
+
+				for(var i = 0; i < usages.length; i++){
+					var total = usages[i].sum.local + usages[i].sum.sync;
+					sum.month += total;
+					if(usages[i].timestamp >= sinceWeek) {
+						sum.week +=total;
+					}
+					if(usages[i].timestamp >= sinceDay) {
+						sum.day += total;
+					}
+				}
+
+				$('#amountDay').html(milisecondToString(sum.day));
+				$('#amountWeek').html(milisecondToString(sum.week));
+				$('#amountMonth').html(milisecondToString(sum.month));
 			});
 		}
 	});
+};
+
+PopupManager.prototype.LoadRule = function(hostname, callback) {
+	var self = this;
+
+	self.db.rule
+	.get(hostname)
+	.done(function(rule) {
+		if(typeof rule == 'undefined') {
+			self.db.rule
+			.query('aliases')
+			.only(hostname)
+			.execute()
+			.done(function(rules){
+				if(rules.length > 0) {
+					callback(rules[0]);
+				}else{
+					callback();
+				}
+			})
+			.fail(function(){
+				console.log('falied to query hostname on aliases');
+			});
+		}else{
+			callback(rule);
+		}
+	}).fail(function(){
+		console.log('falied to get hostname');
+	});	
 };
 
 $(function(){

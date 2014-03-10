@@ -9,7 +9,6 @@
   "permissions": [
     "tabs",
     "cookies",
-    "http://localhost:8080/*",
     "alarms",
     "activeTab"
   ],
@@ -33,10 +32,6 @@
     "persistent": true
   },
   "content_scripts": [
-    {
-      "matches": ["http://localhost:8080/*"],
-      "js": ["js/libs/jquery-2.0.3.js", "js/auth.js"]
-    },
     {
       "matches": ["<all_urls>"],
       "js": ["js/data.js", "js/warning.js"],

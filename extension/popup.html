@@ -24,32 +24,34 @@
 	</style>
 </head>
 <body>
-	<div id="content">
-
-	</div>
-	<table>
+	<table class="table" style="width:100%">
 		<tr>
-			<td>This month</td>
-			<td>1h 5m</td>
+			<th id="content" colspan="2"></th>
 		</tr>
 		<tr>
-			<td>This week</td>
-			<td>30m</td>
+			<td class="nowrap">This month</td>
+			<td class="nowrap" id="amountMonth"></td>
 		</tr>
 		<tr>
-			<td>Today</td>
-			<td>2m 20s</td>
+			<td class="nowrap">This week</td>
+			<td class="nowrap" id="amountWeek"></td>
+		</tr>
+		<tr>
+			<td class="nowrap">Today</td>
+			<td class="nowrap" id="amountDay"></td>
+		</tr>
+		<tr>
+			<td>
+				<a href="statistics.html" target="_blank">
+					<small>More info</small>
+				</a>
+			</td>
+			<td style="text-align:right">
+				<a href="settings.html" target="_blank">
+					<small>Settings</small>
+				</a>
+			</td>
 		</tr>
 	</table>
-	<div>
-		<small>
-			<a href="statistics.html" target="_blank">
-				More info
-			</a>
-			<a href="settings.html" target="_blank">
-				Settings
-			</a>
-		</small>
-	</div>
 </body>
 </html>

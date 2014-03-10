@@ -229,10 +229,10 @@ SurfRight.prototype.Update = function(timestamp, url) {
 				for(var i = 0; i < usages.length; i++){
 					var total = usages[i].sum.local + usages[i].sum.sync;
 					sum.month += total;
-					if(usages.timestamp >= sinceWeek) {
+					if(usages[i].timestamp >= sinceWeek) {
 						sum.week +=total;
 					}
-					if(usages.timestamp >= sinceDay) {
+					if(usages[i].timestamp >= sinceDay) {
 						sum.day += total;
 					}
 				}

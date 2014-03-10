@@ -9,7 +9,8 @@ function OpenDB() {
 				},
 				indexes: {
 					datestamp: {},
-					timestamp: {}
+					timestamp: {},
+					category: {}
 				}
 			},
 			rule: {
@@ -17,9 +18,20 @@ function OpenDB() {
 					keyPath: 'domain'				
 				},
 				indexes: {
-					aliases : {
+					aliases: {
 						unique: true,
 						multiEntry: true
+					}
+				}
+			},
+			category: {
+				key: {
+					keyPath: 'id',
+					autoIncrement: true
+				},
+				indexes: {
+					name:{
+						unique: true
 					}
 				}
 			}
@@ -112,4 +124,38 @@ function Rule(domain) {
 	this.aliases = [];
 	this.ignoreWWW = false;
 	this.instructions = [];
+	this.category = -1;
+}
+
+
+/**
+ * @constructor
+ * @param {string} category name
+ * @struct
+ */
+function Category(name) {
+	this.name = name;
+	this.instructions = [];
+}
+
+
+function AddCategory(name) {
+	var cats = localStorage.getItem('categories');
+	cats.append(name);
+	localStorage.setItem('categories', cats);
+}
+
+function RemoveCategory(index) {
+	var cats = localStorage.getItem('categories');
+	cats.splice(index, 1);
+	localStorage.setItem('categories', cats);
+
+	var db = OpenDB();
+	db.rule.query('category')
+	.only(index)
+	.modify({category: -1})
+	.execute()
+	.done(function(rules){
+		console.log(rules.length+' has been changed')
+	});
 }

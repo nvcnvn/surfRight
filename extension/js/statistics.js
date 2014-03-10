@@ -19,27 +19,29 @@ StatisticManager.prototype.DrawChart = function(d) {
 
 	var pipeData = [];
 	var pipeOther = d.total;
-	var pipeLegend = [];
-	var pipeHref = []
 
 	for(var i = 0; i < n; i++) {
 		var sum = d.data[i].sum;
 		pipeOther -= sum;
-		pipeData.push(sum);
-		pipeHref.push('http://'+d.data[i].hostname);
-		pipeLegend.push('%%.%% '+d.data[i].hostname);
+		pipeData.push([d.data[i].hostname, sum]);
 
 		nBarCol.push(d.data[i].hostname);
 		nBarData.push(sum);
 	}
 
-	pipeLegend.push('%%.%% Others');
-	pipeData.push(pipeOther);
+	pipeData.push(["Others", pipeOther]);
 
-    $('#cTop').highcharts({
+    $('#hostnameBarChart').highcharts({
         chart: {
             type: 'bar',
-            backgroundColor: '#ddd'
+            backgroundColor: {
+            	linearGradient: { x1: 1, y1: 1, x2: 1, y2: 0 },
+			    stops: [
+			        [0, '#bbb'],
+			        [1, '#ddd']
+			    ]
+            },
+            marginLeft: 65
         },
         title: {
 		    text: '',
@@ -98,6 +100,42 @@ StatisticManager.prototype.DrawChart = function(d) {
             enabled: false
         },
         series: [{showInLegend: false, data:nBarData}]
+    });
+
+    $('#hostnamePipeChart').highcharts({
+        chart: {
+            backgroundColor: {
+            	linearGradient: { x1: 1, y1: 1, x2: 1, y2: 0 },
+			    stops: [
+			        [0, '#bbb'],
+			        [1, '#ddd']
+			    ]
+            },
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false
+        },
+        title: {
+            text: ''
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true
+            }
+        },
+        series: [{
+            type: 'pie',
+            name: 'Browser share',
+            data: pipeData
+        }]
     });
 			
 };
