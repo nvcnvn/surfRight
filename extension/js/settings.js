@@ -13,16 +13,51 @@ function RuleManager() {
 
 RuleManager.prototype.List = function(table) {
 	var self = this;
-	var dmMngr = new SiteManager(self.db, 0);
-	$(table).find('.rule-list').append(dmMngr.element);
 
-	self.db.rule.query().all().execute().done(function(rules){
-		$.each(rules, function(idx, item){
-			console.log('item', item)
-			var dmMngr = new SiteManager(self.db, item);
-			$(table).find('.rule-list').append(dmMngr.element);			
+	var fn =function(init){
+		if(typeof init == 'string') {
+			init = new Rule(init);
+		}
+		var dmMngr = new SiteManager(self.db, init);
+		$(table).find('.rule-list').append(dmMngr.element);
+
+		self.db.rule.query().all().execute().done(function(rules){
+			$.each(rules, function(idx, item){
+				var dmMngr = new SiteManager(self.db, item);
+				$(table).find('.rule-list').append(dmMngr.element);			
+			});
 		});
-	});
+	}
+
+	if(window.location.hash.length > 3){
+		var hostname = window.location.hash.slice(1);
+		self.db.rule
+		.get(hostname)
+		.done(function(rule) {
+			if(typeof rule == 'undefined') {
+				self.db.rule
+				.query('aliases')
+				.only(hostname)
+				.execute()
+				.done(function(rules){
+					if(rules.length == 0) {
+						fn(hostname);
+					}else{
+						fn(0);
+					}
+				})
+				.fail(function(){
+					fn(hostname);
+				});
+			}else{
+				fn(0);
+			}
+		}).fail(function(){
+			fn(hostname);
+		});
+	}else{
+		fn(0);
+	}
 };
 
 function ButtonGroup(labels) {
@@ -90,11 +125,12 @@ LabelSite.prototype.Validate = function() {
 	}
 };
 
-function LabelAlias(parent) {
+function LabelAlias(parent, alias) {
 	this.parent = parent;
 
 	this.element = $('<div></div>', {
-		class: 'control-group input-prepend input-append block'
+		class: 'control-group input-prepend input-append block',
+		id: alias
 	}).data('data', this);
 
 	this.element.append($('<span class="add-on">http(s)://</span>'));
@@ -128,6 +164,11 @@ function LabelAlias(parent) {
 	self.bt.lbl1.click(function(){
 		self.element.remove();
 	});
+
+	if(typeof alias != 'undefined' && (typeof alias == 'string' || alias instanceof String)) {
+		self.txtAlias.val(alias);
+	}
+	self.txtAlias.focus();
 }
 
 LabelAlias.prototype.Val = function() {
@@ -240,7 +281,9 @@ function SiteManager(db, data) {
 	}
 
 	this.data = data;
-	this.element = $('<tr></tr>').data('data', this.data);
+	this.element = $('<tr></tr>', {
+		id: this.data.domain
+	}).data('data', this.data);
 
 	this.tdSite = $('<td></td>');
 	this.element.append(this.tdSite);
@@ -328,12 +371,8 @@ SiteManager.prototype.Save = function() {
 };
 
 SiteManager.prototype.AddLabelAlias = function(alias) {
-	var l = new LabelAlias(this);
+	var l = new LabelAlias(this, alias);
 	this.tdAliases.append(l.element);
-	if(typeof alias == 'string' || alias instanceof String) {
-		l.txtAlias.val(alias);
-	}
-	l.txtAlias.focus();
 };
 
 SiteManager.prototype.AddLabelInstruction = function(rule) {

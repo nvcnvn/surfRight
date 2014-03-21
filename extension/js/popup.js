@@ -33,8 +33,8 @@ PopupManager.prototype.Display = function(container) {
 		}
 		if(hostname != null && hostname.length > 3){
 			$(container).html(hostname);
-
-			$('#amountDay').html('aaaaaaaaa');
+			$('#linkSetting').attr('href', 'settings.html#'+hostname);
+			
 			var now = new Date();
 			var sinceMonth = getMonthUTC(now);
 			var sinceWeek = getWeekUTC(now);
@@ -45,6 +45,7 @@ PopupManager.prototype.Display = function(container) {
 			.filter(function(usage){
 				var in_aliases = false;
 				self.LoadRule(hostname, function(rule){
+					$('#linkSetting').attr('href', 'settings.html#'+rule.domain);
 					for(var i = 0; i < rule.aliases.length; i++) {
 						if(usage.domain == rule.aliases[i]) {
 							in_aliases = true;
