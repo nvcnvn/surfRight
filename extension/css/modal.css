@@ -37,3 +37,7 @@
 }
 
 #surfRightModalWarningClose:hover { background: #00d9ff; }
+
+#surfRightModalWarningMessage{
+	font-size: 24px;
+}

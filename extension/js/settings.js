@@ -192,7 +192,7 @@ function LabelInstruction(parent) {
 		class: 'control-group controls-row input-prepend input-append block'
 	}).data('data', this);
 
-	//this.element.append($('<span class="add-on">In</span>'));
+	this.element.append($('<span class="add-on">In</span>'));
 
 	this.sltRule = $('<select></select>', {
 		class: 'input-small'
@@ -211,7 +211,7 @@ function LabelInstruction(parent) {
 	}));
 	this.element.append(this.sltRule);
 
-	this.element.append($('<span class="add-on"></span>'));
+	this.element.append($('<span class="add-on">if surf</span>'));
 
 	this.amount = $('<input/>', {
 		class: 'input-mini',
@@ -220,7 +220,7 @@ function LabelInstruction(parent) {
 	});
 	this.element.append(this.amount);
 
-	this.element.append($('<span class="add-on"></span>'));
+	this.element.append($('<span class="add-on">hours, then give</span>'));
 
 	this.sltLevel = $('<select></select>', {
 		class: 'input-small'

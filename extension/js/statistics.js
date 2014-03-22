@@ -82,7 +82,14 @@ StatisticManager.prototype.DrawChart = function(d) {
         },
         plotOptions: {
             bar: {
-                colorByPoint: true
+                colorByPoint: true,
+                point: {
+                	events: {
+                		click: function(){
+                			location.href = 'settings.html#'+this.category;
+                		}
+                	}
+                }
             }
         },
         legend: {
@@ -128,7 +135,16 @@ StatisticManager.prototype.DrawChart = function(d) {
                 dataLabels: {
                     enabled: false
                 },
-                showInLegend: true
+                showInLegend: true,
+                point: {
+                	events: {
+                		click: function(){
+                			if(this.name != "Others"){
+                				location.href = 'settings.html#'+this.name;
+                			}
+                		}
+                	}
+                }
             }
         },
         series: [{

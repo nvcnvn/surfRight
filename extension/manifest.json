@@ -39,5 +39,8 @@
     }
   ],
   "offline_enabled": true,
-  "options_page": "settings.html"
+  "options_page": "settings.html",
+  "web_accessible_resources": [
+    "img/*"
+  ]
 }
