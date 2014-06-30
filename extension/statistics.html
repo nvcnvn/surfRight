@@ -24,12 +24,16 @@
 			</div>
 			<div id="collapseOne" class="accordion-body collapse">
 				<div class="accordion-inner">
-					<select id="slRange">
-						<option value="day">today</option>
-						<option value="week">this week</option>
-						<option value="month">this month</option>
-						<option value="all">begining of time</option>
-					</select>
+					<div class="input-prepend">
+						<label for="slRange" class="add-on">Show chart for</label>
+						<select id="slRange">
+							<option value="day">today</option>
+							<option value="week">this week</option>
+							<option value="month">this month</option>
+							<option value="all" selected>begining of time</option>
+						</select>
+					</div>
+					<a style="float:right" href="settings.html">Settings</a>
 				</div>
 			</div>
 		</div>

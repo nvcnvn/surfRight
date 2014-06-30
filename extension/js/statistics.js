@@ -11,7 +11,23 @@ function StatisticManager() {
 	});
 }
 
+function setTranslation(p, slice) {
+    p.sliced = slice;
+    if (p.sliced) {
+        p.graphic.animate(p.slicedTranslation);
+    } else {
+        p.graphic.animate({
+            translateX: 0,
+            translateY: 0
+        });
+    }
+
+}
+
 StatisticManager.prototype.DrawChart = function(d) {
+    Highcharts.setOptions({
+        colors:['#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4', '#FFE4C4', '#D2691E', '#F0E68C']
+    });
 	var n = (10 <= d.data.length)?10:d.data.length;
 
 	var nBarData = [];
@@ -34,13 +50,6 @@ StatisticManager.prototype.DrawChart = function(d) {
     $('#hostnameBarChart').highcharts({
         chart: {
             type: 'bar',
-            backgroundColor: {
-            	linearGradient: { x1: 1, y1: 1, x2: 1, y2: 0 },
-			    stops: [
-			        [0, '#bbb'],
-			        [1, '#ddd']
-			    ]
-            },
             marginLeft: 65
         },
         title: {
@@ -60,8 +69,7 @@ StatisticManager.prototype.DrawChart = function(d) {
             	y: 5,
                 align: 'left',
                 style: {
-                    fontSize: '1.5em',
-                    color: 'white'
+                    fontSize: '1.5em'
                 }
             }
         },
@@ -111,13 +119,6 @@ StatisticManager.prototype.DrawChart = function(d) {
 
     $('#hostnamePipeChart').highcharts({
         chart: {
-            backgroundColor: {
-            	linearGradient: { x1: 1, y1: 1, x2: 1, y2: 0 },
-			    stops: [
-			        [0, '#bbb'],
-			        [1, '#ddd']
-			    ]
-            },
             plotBackgroundColor: null,
             plotBorderWidth: null,
             plotShadow: false
@@ -130,19 +131,30 @@ StatisticManager.prototype.DrawChart = function(d) {
         },
         plotOptions: {
             pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
+                cursor: "pointer",
+                animation: 0,
+                borderWidth: 2,
+                shadow: 0,
+                slicedOffset: 15,
+                showInLegend: 1,
+                size: "80%",
+                showInLegend: true,
                 dataLabels: {
                     enabled: false
                 },
-                showInLegend: true,
                 point: {
                 	events: {
                 		click: function(){
                 			if(this.name != "Others"){
                 				location.href = 'settings.html#'+this.name;
                 			}
-                		}
+                		},
+                        mouseOut: function () {
+                            setTranslation(this, false);
+                        },
+                        mouseOver: function () {
+                            setTranslation(this, true);
+                        }
                 	}
                 }
             }
